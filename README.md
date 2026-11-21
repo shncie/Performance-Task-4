@@ -30,29 +30,42 @@ The relational database schema consists of 4 interrelated entities designed in 3
 
 ### Entity Relationship Diagram
 
-```text
-+---------------------------------------+               +---------------------------------------+
-|                Patient                |               |           DiagnosticService           |
-+---------------------------------------+               +---------------------------------------+
-| PK  Id            INTEGER             |               | PK  Id            INTEGER             |
-|     FullName      TEXT (Req, Max 150) |               |     Name          TEXT (Req, Max 100) |
-|     DateOfBirth   TEXT                |               |     Description   TEXT                |
-|     ContactNumber TEXT (Max 50)       |               |     DailyCapacity INTEGER (Req)       |
-+-------------------+-------------------+               +-------------------+-------------------+
-                    | 1                                                     | 1
-                    |                                                       |
-                    | has many                                              | referenced in
-                    |                                                       |
-                    | M                                                     | M
-+-------------------v-------------------+               +-------------------v-------------------+
-|                Booking                | 1           M |              BookingItem              |
-+---------------------------------------+---------------+---------------------------------------+
-| PK  Id            INTEGER             |               | PK  Id                  INTEGER       |
-| FK  PatientId     INTEGER (Req)       |               | FK  BookingId           INTEGER (Req) |
-|     BookingDate   TEXT (Req, Indexed) |               | FK  DiagnosticServiceId INTEGER (Req) |
-|     CreatedAt     TEXT (Req)          |               +---------------------------------------+
-+---------------------------------------+               * UNIQUE INDEX: (BookingId, DiagnosticServiceId)
+## 2. Relational Design
+
+```mermaid
+erDiagram
+    Patient ||--o{ Booking : places
+    DiagnosticService ||--o{ BookingItem : "included in"
+    Booking ||--|{ BookingItem : contains
+
+    Patient {
+        int patient_id PK
+        string patient_name
+        string dateofbirth
+        string contact_number
+    }
+
+    DiagnosticService {
+        int dianosticservice_id PK
+        string diagnostic_name
+        string description
+        int daily_capacity
+    }
+
+    Booking {
+        int booking_id PK
+        int patient_id FK
+        date booking_date
+        date created_at
+    }
+
+    BookingItem {
+        int bookingitem_id PK
+        int booking_id FK
+        int dianosticservice_id FK
+    }
 ```
+*(UNIQUE INDEX on BookingItem: `BookingId`, `DiagnosticServiceId`)*
 
 ### Entity Tables Summary
 
