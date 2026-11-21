@@ -1,6 +1,3 @@
-Here is the **exact, complete text** ready for you to copy and paste directly into your `README.md` file:
-
-```markdown
 # CareFlow - Diagnostic Booking Management
 **Course Component**: ITSD81 - Desktop Application Development  
 **Unit**: IV - Data-Driven Application Architecture and Transactional Workflows  
@@ -29,8 +26,11 @@ The solution maintains strict boundaries between UI, application logic, and pers
 ## 2. Relational Design
 
 The relational database schema consists of 4 interrelated entities designed in 3NF:
+## 2. Relational Design
 
-```
+### Entity Relationship Diagram
+
+```text
 +---------------------------------------+               +---------------------------------------+
 |                Patient                |               |           DiagnosticService           |
 +---------------------------------------+               +---------------------------------------+
@@ -54,49 +54,39 @@ The relational database schema consists of 4 interrelated entities designed in 3
 +---------------------------------------+               * UNIQUE INDEX: (BookingId, DiagnosticServiceId)
 ```
 
-### Relational Schema Specifications:
-- **`Patient` -> `Booking`**: One-to-Many (`1 : M`). A patient can make multiple bookings over time. Deleting a patient with active bookings is restricted (`DeleteBehavior.Restrict`).
-- **`Booking` -> `BookingItem`**: One-to-Many (`1 : M`). A booking header contains 1 to 3 service line items. Deleting a booking cascades to its items (`DeleteBehavior.Cascade`).
-- **`DiagnosticService` -> `BookingItem`**: One-to-Many (`1 : M`). A service can be referenced across multiple bookings. Deletions are restricted to preserve history (`DeleteBehavior.Restrict`).
-- **Composite Unique Index**: `BookingItem(BookingId, DiagnosticServiceId)` enforces database-level prevention of duplicate services in the same booking (BR-06).
+### Entity Tables Summary
 
----
+#### 1. Patient Table
+| Column | Data Type | Constraints | Description |
+|---|---|---|---|
+| `Id` | INTEGER | Primary Key, Auto-increment | Unique identifier for patient |
+| `FullName` | TEXT | Required, Max length 150 | Patient's complete name |
+| `DateOfBirth` | TEXT | Optional | Patient's date of birth |
+| `ContactNumber`| TEXT | Max length 50 | Contact phone number |
 
-## 3. Database Initialization, Migrations, & Running
+#### 2. DiagnosticService Table
+| Column | Data Type | Constraints | Description |
+|---|---|---|---|
+| `Id` | INTEGER | Primary Key, Auto-increment | Unique service ID |
+| `Name` | TEXT | Required, Max length 100 | Service name (e.g. CBC, ECG) |
+| `Description` | TEXT | Optional | Description of the test |
+| `DailyCapacity`| INTEGER | Required | Maximum bookings allowed per day |
 
-### Prerequisites
-- [.NET 10 SDK](https://dotnet.microsoft.com/)
-- Visual Studio 2022 / 2025 (with .NET desktop development workload)
-- SQLite (bundled automatically with the EF Core provider)
+#### 3. Booking Table
+| Column | Data Type | Constraints | Description |
+|---|---|---|---|
+| `Id` | INTEGER | Primary Key, Auto-increment | Booking reference number |
+| `PatientId` | INTEGER | Foreign Key -> `Patient(Id)` | References existing patient (BR-01) |
+| `BookingDate` | TEXT | Required, Indexed | Scheduled date of diagnostic tests |
+| `CreatedAt` | TEXT | Required | Audit timestamp |
 
-### Automatic Database Initialization & Seed Data
-You do **not** need to manually create or configure SQLite. On application startup, `App.axaml.cs` runs `dbContext.Database.EnsureCreated()`, which automatically generates `careflow.db` in the application runtime directory and seeds:
-- **5 Fictional Patients**: Juan Dela Cruz, Maria Santos, Antonio Luna, Elena Reyes, Gabriel Mendoza.
-- **4 Diagnostic Services with Defined Daily Capacities**:
-  1. Complete Blood Count (CBC) – Daily Capacity: 5
-  2. Urinalysis – Daily Capacity: 5
-  3. Chest X-Ray – Daily Capacity: 3
-  4. ECG (Electrocardiogram) – Daily Capacity: 2
-
-### Running in Visual Studio
-1. Open Visual Studio.
-2. Open the solution file: `CareFlow.sln` (or `CareFlow.csproj`).
-3. Set **`CareFlow`** as the Startup Project.
-4. Press **F5** (or click the green **Start** button).
-
-### Running via Terminal / CLI
-```powershell
-cd CareFlow
-dotnet run
-```
-
-### Applying EF Core Migrations (Optional)
-If you wish to apply or update migrations manually via CLI:
-```powershell
-dotnet ef database update --project CareFlow.csproj --startup-project CareFlow.csproj
-```
-
----
+#### 4. BookingItem Table (Junction Table)
+| Column | Data Type | Constraints | Description |
+|---|---|---|---|
+| `Id` | INTEGER | Primary Key, Auto-increment | Item line identifier |
+| `BookingId` | INTEGER | Foreign Key -> `Booking(Id)` | Parent booking header |
+| `DiagnosticServiceId` | INTEGER | Foreign Key -> `DiagnosticService(Id)` | Selected test (BR-02, BR-04) |
+| *(Composite)* | UNIQUE INDEX | `(BookingId, DiagnosticServiceId)` | Prevents duplicate service (BR-06) |
 
 ## 4. Mandatory Business Rules Implementation Matrix
 
