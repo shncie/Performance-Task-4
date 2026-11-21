@@ -1,22 +1,159 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:CareFlow.ViewModels"
+        xmlns:m="using:CareFlow.Models"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="750"
         x:Class="CareFlow.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="CareFlow">
+        Title="CareFlow - Outpatient Diagnostic Booking Management"
+        Width="1150" Height="780"
+        WindowStartupLocation="CenterScreen">
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainViewModel />
-    </Design.DataContext>
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#1E3A8A" Padding="20,14">
+            <Grid ColumnDefinitions="*, Auto">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="CareFlow Diagnostic Booking System" FontSize="22" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="Outpatient Department Capacity &amp; Transaction Coordination" FontSize="13" Foreground="#93C5FD"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Refresh" Command="{Binding RefreshAvailabilityCommand}" Background="#3B82F6" Foreground="White" Padding="14,6" CornerRadius="4"/>
+            </Grid>
+        </Border>
 
-    <TextBox Text="{Binding Greeting}"
-             HorizontalAlignment="Center"
-             VerticalAlignment="Center" />
+        <!-- Main Body (2 Columns) -->
+        <Grid Grid.Row="1" ColumnDefinitions="480, *" Margin="16">
+            <!-- Left: New Booking Form -->
+            <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,10,0">
+                <ScrollViewer>
+                    <StackPanel Spacing="14">
+                        <TextBlock Text="New Diagnostic Booking" FontSize="18" FontWeight="SemiBold" Foreground="#0F172A"/>
 
+                        <!-- 1. Patient Picker -->
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="1. Select Patient (BR-01):" FontWeight="Medium" Foreground="#334155"/>
+                            <ComboBox ItemsSource="{Binding Patients}" 
+                                      SelectedItem="{Binding SelectedPatient}" 
+                                      HorizontalAlignment="Stretch">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="m:Patient">
+                                        <TextBlock Text="{Binding FullName}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <TextBlock Text="{Binding SelectedPatient.ContactNumber, StringFormat='Contact: {0}'}" 
+                                       FontSize="11" Foreground="#64748B"/>
+                        </StackPanel>
+
+                        <!-- 2. Date Picker -->
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="2. Select Booking Date (BR-03):" FontWeight="Medium" Foreground="#334155"/>
+                            <DatePicker SelectedDate="{Binding SelectedDateOffset}" HorizontalAlignment="Stretch"/>
+                            <TextBlock Text="* Cannot be earlier than current date" FontSize="11" Foreground="#64748B"/>
+                        </StackPanel>
+
+                        <!-- 3. Diagnostic Services Selection -->
+                        <StackPanel Spacing="6">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <TextBlock Grid.Column="0" Text="3. Diagnostic Services (Select 1 to 3):" FontWeight="Medium" Foreground="#334155"/>
+                                <TextBlock Grid.Column="1" Text="Remaining Capacity" FontSize="12" FontWeight="SemiBold" Foreground="#475569"/>
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding Services}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SelectableServiceViewModel">
+                                        <Border Margin="0,3" Padding="10,8" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6">
+                                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="#1E293B"/>
+                                                    <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#64748B"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="{Binding AvailabilityText}" 
+                                                           FontSize="12" FontWeight="Bold" Foreground="#2563EB" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <Separator Background="#E2E8F0"/>
+
+                        <!-- Verification Helper (AC-05 Demonstration) -->
+                        <Border Background="#FEF3C7" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="6" Padding="10">
+                            <CheckBox IsChecked="{Binding SimulateFailureOnConfirm}" VerticalAlignment="Center">
+                                <StackPanel>
+                                    <TextBlock Text="Simulate Database Crash Before Commit (AC-05)" FontWeight="Bold" Foreground="#92400E" FontSize="12"/>
+                                    <TextBlock Text="Tests transactional rollback; prevents partial booking persistence." FontSize="11" Foreground="#B45309" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </CheckBox>
+                        </Border>
+
+                        <!-- Submit Button -->
+                        <Button Content="Confirm Booking (Atomic Transaction)" 
+                                Command="{Binding SubmitBookingCommand}" 
+                                IsEnabled="{Binding !IsLoading}"
+                                Background="#10B981" Foreground="White" 
+                                FontWeight="Bold" FontSize="14"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" 
+                                Padding="12,10" CornerRadius="6"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Right: Confirmed Bookings View -->
+            <Border Grid.Column="1" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16" Margin="10,0,0,0">
+                <Grid RowDefinitions="Auto, *, Auto">
+                    <TextBlock Grid.Row="0" Text="Confirmed Bookings (SQLite Persisted)" FontSize="18" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,10"/>
+
+                    <ListBox Grid.Row="1" ItemsSource="{Binding Bookings}" SelectedItem="{Binding SelectedBooking}" Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="m:Booking">
+                                <Border Margin="0,4" Padding="12" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6">
+                                    <Grid ColumnDefinitions="Auto, *, Auto">
+                                        <Border Grid.Column="0" Background="#EEF2FF" CornerRadius="4" Padding="8,4" VerticalAlignment="Center" Margin="0,0,12,0">
+                                            <TextBlock Text="{Binding Id, StringFormat='#{0}'}" FontWeight="Bold" Foreground="#4F46E5"/>
+                                        </Border>
+
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                            <TextBlock Text="{Binding Patient.FullName}" FontWeight="Bold" FontSize="14" Foreground="#1E293B"/>
+                                            <TextBlock Text="{Binding BookingDate, StringFormat='Scheduled: {0:yyyy-MM-dd}'}" FontSize="12" Foreground="#475569"/>
+                                            <ItemsControl ItemsSource="{Binding BookingItems}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="m:BookingItem">
+                                                        <TextBlock Text="{Binding DiagnosticService.Name, StringFormat='• {0}'}" FontSize="12" Foreground="#047857"/>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="2" Text="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" FontSize="11" Foreground="#94A3B8" VerticalAlignment="Top"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <Border Grid.Row="2" Background="#E2E8F0" CornerRadius="6" Padding="10,8" Margin="0,10,0,0">
+                        <TextBlock Text="{Binding Bookings.Count, StringFormat='Total Confirmed Bookings: {0}'}" FontWeight="Medium" Foreground="#334155"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Bottom: Status Bar -->
+        <Border Grid.Row="2" Background="#F1F5F9" Padding="16,8">
+            <Grid ColumnDefinitions="*, Auto">
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" 
+                           FontWeight="Medium"
+                           Foreground="{Binding IsStatusError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                           VerticalAlignment="Center"/>
+                <ProgressBar Grid.Column="1" IsIndeterminate="True" IsVisible="{Binding IsLoading}" Width="100" Height="8" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
 </Window>
