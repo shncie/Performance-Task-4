@@ -25,13 +25,6 @@ The solution maintains strict boundaries between UI, application logic, and pers
 
 ## 2. Relational Design
 
-The relational database schema consists of 4 interrelated entities designed in 3NF:
-## 2. Relational Design
-
-### Entity Relationship Diagram
-
-## 2. Relational Design
-
 ```mermaid
 erDiagram
     Patient ||--o{ Booking : places
